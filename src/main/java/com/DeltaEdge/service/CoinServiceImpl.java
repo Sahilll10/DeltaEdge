@@ -8,6 +8,7 @@ import com.DeltaEdge.repository.CoinRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +25,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class CoinServiceImpl implements CoinService {
+
+    @Value("${coingecko.api.key}")
+    private String apiKey;
+
     @Autowired
     private CoinRepository coinRepository;
 
@@ -57,15 +62,16 @@ public class CoinServiceImpl implements CoinService {
         }
 
         log.info("Redis Cache Miss. Fetching from CoinGecko...");
-        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&page=" + page;
+        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&page=" + page
+                + "&x_cg_demo_api_key=" + apiKey;
 
         try {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
             List<Coin> coinList = objectMapper.readValue(response.getBody(), new TypeReference<List<Coin>>() {});
 
-            // 2. CRITICAL FIX: Save to local H2 Database so findById works!
+            // 2. Persistent Save: Persisted cleanly to DB
             coinRepository.saveAll(coinList);
-            log.info("Successfully saved {} coins to H2 Database", coinList.size());
+            log.info("Successfully saved {} coins to Database", coinList.size());
 
             // 3. Save to Redis Cache
             redisTemplate.opsForValue().set(cacheKey, coinList, 5, TimeUnit.MINUTES);
@@ -84,19 +90,21 @@ public class CoinServiceImpl implements CoinService {
 
     // Fallback for Circuit Breaker
     public List<Coin> fallbackGetCoinList(int page, Throwable t) {
-        log.warn("Circuit Breaker Active. Returning data from Local Database.");
+        log.warn("Circuit Breaker Active. Returning data from Local Database. Reason: {}", t.getMessage());
         return coinRepository.findAll().stream().limit(10).toList();
     }
 
     @Override
     public String getMarketChart(String coinId, int days) throws Exception {
-        String url = "https://api.coingecko.com/api/v3/coins/" + coinId + "/market_chart?vs_currency=usd&days=" + days;
+        String url = "https://api.coingecko.com/api/v3/coins/" + coinId + "/market_chart?vs_currency=usd&days=" + days
+                + "&x_cg_demo_api_key=" + apiKey;
         return restTemplate.getForObject(url, String.class);
     }
 
     @Override
     public String getCoinDetails(String coinId) throws Exception {
-        String url = "https://api.coingecko.com/api/v3/coins/" + coinId;
+        String url = "https://api.coingecko.com/api/v3/coins/" + coinId
+                + "?x_cg_demo_api_key=" + apiKey;
         try {
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             JsonNode root = objectMapper.readTree(response.getBody());
@@ -114,8 +122,8 @@ public class CoinServiceImpl implements CoinService {
                 double rate = inrRate.doubleValue();
 
                 coin.setCurrentPrice(safeGetNestedDouble(marketData, "current_price", "usd") * rate);
-                coin.setHigh24h(safeGetNestedDouble(marketData, "high_24h", "usd") * rate);
-                coin.setLow24h(safeGetNestedDouble(marketData, "low_24h", "usd") * rate);
+                coin.setHigh24h(safeGetNestedDouble(marketData, "high_24_h", "usd") * rate);
+                coin.setLow24h(safeGetNestedDouble(marketData, "low_24_h", "usd") * rate);
                 coin.setMarketCap((long) (safeGetNestedLong(marketData, "market_cap", "usd") * rate));
                 coin.setMarketCapRank(root.path("market_cap_rank").asInt());
             }
@@ -132,17 +140,23 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public String searchCoin(String keyword) throws Exception {
-        return restTemplate.getForObject("https://api.coingecko.com/api/v3/search?query=" + keyword, String.class);
+        String url = "https://api.coingecko.com/api/v3/search?query=" + keyword
+                + "&x_cg_demo_api_key=" + apiKey;
+        return restTemplate.getForObject(url, String.class);
     }
 
     @Override
     public String getTop50CoinsByMarketCapRank() throws Exception {
-        return restTemplate.getForObject("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=50&page=1", String.class);
+        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=50&page=1"
+                + "&x_cg_demo_api_key=" + apiKey;
+        return restTemplate.getForObject(url, String.class);
     }
 
     @Override
     public String getTradingCoins() throws Exception {
-        return restTemplate.getForObject("https://api.coingecko.com/api/v3/search/trending", String.class);
+        String url = "https://api.coingecko.com/api/v3/search/trending"
+                + "?x_cg_demo_api_key=" + apiKey;
+        return restTemplate.getForObject(url, String.class);
     }
 
     private String safeGetText(JsonNode node, String field) {

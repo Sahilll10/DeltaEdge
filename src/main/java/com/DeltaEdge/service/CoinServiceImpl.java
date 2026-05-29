@@ -54,14 +54,18 @@ public class CoinServiceImpl implements CoinService {
     public List<Coin> getCoinList(int page) throws Exception {
         String cacheKey = COIN_CACHE_KEY + page;
 
-        // 1. Try Redis Cache
-        List<Coin> cachedCoins = (List<Coin>) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedCoins != null) {
-            log.info("Redis Cache Hit: {}", cacheKey);
-            return cachedCoins;
+        // 1. Try Redis Cache (SAFELY wrapped in a try-catch)
+        try {
+            List<Coin> cachedCoins = (List<Coin>) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedCoins != null) {
+                log.info("Redis Cache Hit: {}", cacheKey);
+                return cachedCoins;
+            }
+        } catch (Exception e) {
+            log.warn("Redis is offline. Bypassing cache -> {}", e.getMessage());
         }
 
-        log.info("Redis Cache Miss. Fetching from CoinGecko...");
+        log.info("Fetching from CoinGecko...");
         String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&page=" + page
                 + "&x_cg_demo_api_key=" + apiKey;
 
@@ -69,12 +73,16 @@ public class CoinServiceImpl implements CoinService {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), String.class);
             List<Coin> coinList = objectMapper.readValue(response.getBody(), new TypeReference<List<Coin>>() {});
 
-            // 2. Persistent Save: Persisted cleanly to DB
+            // 2. Persistent Save
             coinRepository.saveAll(coinList);
             log.info("Successfully saved {} coins to Database", coinList.size());
 
-            // 3. Save to Redis Cache
-            redisTemplate.opsForValue().set(cacheKey, coinList, 5, TimeUnit.MINUTES);
+            // 3. Save to Redis Cache (SAFELY)
+            try {
+                redisTemplate.opsForValue().set(cacheKey, coinList, 5, TimeUnit.MINUTES);
+            } catch (Exception e) {
+                log.warn("Could not save to Redis, but API data was fetched successfully.");
+            }
 
             return coinList;
         } catch (Exception e) {
@@ -82,7 +90,6 @@ public class CoinServiceImpl implements CoinService {
             throw e;
         }
     }
-
     @Override
     public Coin findById(String coinId) throws Exception {
         return coinRepository.findById(coinId).orElseThrow(() -> new Exception("Coin Not Found"));

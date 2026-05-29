@@ -18,7 +18,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -66,7 +65,7 @@ public class CoinServiceImpl implements CoinService {
         }
 
         log.info("Fetching from CoinGecko...");
-        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&page=" + page
+        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=inr&per_page=10&page=" + page
                 + "&x_cg_demo_api_key=" + apiKey;
 
         try {
@@ -90,6 +89,7 @@ public class CoinServiceImpl implements CoinService {
             throw e;
         }
     }
+
     @Override
     public Coin findById(String coinId) throws Exception {
         return coinRepository.findById(coinId).orElseThrow(() -> new Exception("Coin Not Found"));
@@ -103,7 +103,7 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public String getMarketChart(String coinId, int days) throws Exception {
-        String url = "https://api.coingecko.com/api/v3/coins/" + coinId + "/market_chart?vs_currency=usd&days=" + days
+        String url = "https://api.coingecko.com/api/v3/coins/" + coinId + "/market_chart?vs_currency=inr&days=" + days
                 + "&x_cg_demo_api_key=" + apiKey;
         return restTemplate.getForObject(url, String.class);
     }
@@ -116,7 +116,6 @@ public class CoinServiceImpl implements CoinService {
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             JsonNode root = objectMapper.readTree(response.getBody());
 
-            BigDecimal inrRate = currencyService.getUsdToInrRate();
             Coin coin = new Coin();
 
             coin.setId(safeGetText(root, "id"));
@@ -124,14 +123,14 @@ public class CoinServiceImpl implements CoinService {
             coin.setSymbol(safeGetText(root, "symbol"));
             coin.setImage(root.path("image").path("large").asText());
 
+            // FIX: Pulling native INR data directly from the JSON node, no manual conversion needed
             if (root.has("market_data")) {
                 JsonNode marketData = root.get("market_data");
-                double rate = inrRate.doubleValue();
 
-                coin.setCurrentPrice(safeGetNestedDouble(marketData, "current_price", "usd") * rate);
-                coin.setHigh24h(safeGetNestedDouble(marketData, "high_24_h", "usd") * rate);
-                coin.setLow24h(safeGetNestedDouble(marketData, "low_24_h", "usd") * rate);
-                coin.setMarketCap((long) (safeGetNestedLong(marketData, "market_cap", "usd") * rate));
+                coin.setCurrentPrice(safeGetNestedDouble(marketData, "current_price", "inr"));
+                coin.setHigh24h(safeGetNestedDouble(marketData, "high_24h", "inr"));
+                coin.setLow24h(safeGetNestedDouble(marketData, "low_24h", "inr"));
+                coin.setMarketCap(safeGetNestedLong(marketData, "market_cap", "inr"));
                 coin.setMarketCapRank(root.path("market_cap_rank").asInt());
             }
 
@@ -141,7 +140,7 @@ public class CoinServiceImpl implements CoinService {
             return response.getBody();
         } catch (Exception e) {
             log.error("Conversion Error for {}: {}", coinId, e.getMessage());
-            throw new Exception("Exchange rate service unavailable.");
+            throw new Exception("Coin details fetch failed.");
         }
     }
 
@@ -154,7 +153,7 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public String getTop50CoinsByMarketCapRank() throws Exception {
-        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=50&page=1"
+        String url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=inr&per_page=50&page=1"
                 + "&x_cg_demo_api_key=" + apiKey;
         return restTemplate.getForObject(url, String.class);
     }

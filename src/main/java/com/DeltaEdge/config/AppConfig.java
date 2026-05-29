@@ -45,7 +45,7 @@ public class AppConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Frontend origins (React/Vite setup)
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "https://your-vercel-app-url.vercel.app"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);
 

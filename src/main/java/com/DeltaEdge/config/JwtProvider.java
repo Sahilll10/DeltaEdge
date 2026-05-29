@@ -13,12 +13,8 @@ import java.util.Set;
 
 public class JwtProvider {
 
-    private static final String SECRET_KEY =
-            "mysecretkeymysecretkeymysecretkeymysecretkey";
-
-    private static final SecretKey key =
-            Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-
+    // SDE FIX: Dynamically link to the centralized secure key!
+    private static final SecretKey key = Keys.hmacShaKeyFor(JwtConstant.SECRET_KEY.getBytes());
 
     public static String generateToken(Authentication auth) {
         String roles = populateAuthorities(auth.getAuthorities());
@@ -31,21 +27,19 @@ public class JwtProvider {
                 .compact();
     }
 
-//    EXTRACT EMAIL
-public static String getEmailFromJwtToken(String jwt) {
-    // REMOVED the "Bearer " substring logic here to prevent double-stripping
-    Claims claims = Jwts.parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(jwt)
-            .getBody();
+    // EXTRACT EMAIL
+    public static String getEmailFromJwtToken(String jwt) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody();
 
-    return String.valueOf(claims.get("email"));
-}
+        return String.valueOf(claims.get("email"));
+    }
 
-//    POPULATE AUTHORITIES:
-    private static String populateAuthorities(
-            Collection<? extends GrantedAuthority> authorities) {
+    // POPULATE AUTHORITIES:
+    private static String populateAuthorities(Collection<? extends GrantedAuthority> authorities) {
         Set<String> auths = new HashSet<>();
         for (GrantedAuthority ga : authorities) {
             auths.add(ga.getAuthority());

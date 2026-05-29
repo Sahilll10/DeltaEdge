@@ -1,8 +1,7 @@
 package com.DeltaEdge.config;
 
-
 public class JwtConstant {
-    public static final String SECRET_KEY="sahilisthegreatestofalltime";
-    public static final String JWT_HEADER="Authorization";
-
+    // This key is 47 characters long (highly secure)
+    public static final String SECRET_KEY = "wpembytrwcvnryxksdbqwjebruyGHyudqgwveytrtrCSnwz";
+    public static final String JWT_HEADER = "Authorization";
 }

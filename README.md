@@ -9,8 +9,8 @@
 DeltaEdge is a full-stack, cloud-deployed cryptographic trading simulator and market analysis engine. Built with a resilient microservice-oriented architecture, it provides real-time market data, secure dual-entry wallet management, and robust order execution capabilities.
 
 ### 🔗 Live Links
-* **Live Dashboard (Frontend):** [Insert your Vercel Link here]
-* **API Engine (Backend):** [Insert your Render Link here]
+* **Live Dashboard (Frontend):** [https://delta-edge-frontend.vercel.app/]
+* **API Engine (Backend):** [https://deltaedge-engine.onrender.com/]
 
 ---
 

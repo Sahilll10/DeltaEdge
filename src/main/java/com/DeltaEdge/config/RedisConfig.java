@@ -15,7 +15,6 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
-        // Use String serializer for keys
         template.setKeySerializer(new StringRedisSerializer());
         // Use JSON serializer for values so we can store Objects
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer());

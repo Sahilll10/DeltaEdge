@@ -14,21 +14,23 @@ public class GraphController {
 
     @Autowired
     private GraphAnalysisService graphAnalysisService;
+
+    @Autowired
+    private com.DeltaEdge.service.GraphDataSyncService graphDataSyncService;
+
     @GetMapping("/risk")
     public ResponseEntity<Map<String, Double>> getContagionRisk(
             @RequestParam String source,
             @RequestParam double drop) {
-
         Map<String, Double> impact = graphAnalysisService.calculateContagionRisk(source, drop);
         return ResponseEntity.ok(impact);
     }
+
     @GetMapping("/clusters")
     public ResponseEntity<List<List<String>>> getMarketClusters() {
         List<List<String>> clusters = graphAnalysisService.findMarketClusters();
         return ResponseEntity.ok(clusters);
     }
-    @Autowired
-    private com.DeltaEdge.service.GraphDataSyncService graphDataSyncService;
 
     @PostMapping("/sync")
     public ResponseEntity<String> syncGraphData() {
@@ -41,20 +43,20 @@ public class GraphController {
                 }
             }).start();
 
-            return ResponseEntity.ok("Graph synchronization started in the background." +
-                                           " Check IntelliJ console for logs.");
+            return ResponseEntity.ok("Graph synchronization started in the background.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Sync failed: " + e.getMessage());
         }
     }
 
-    // FIX: Added the missing /edges endpoint requested by the frontend
     @GetMapping("/edges")
     public ResponseEntity<?> getGraphEdges() {
-        // Assuming your GraphAnalysisService has a method to fetch the graph edges.
-        // If the method is named differently in your service, just update this line!
         Object edges = graphAnalysisService.getGraphEdges();
         return ResponseEntity.ok(edges);
+    }
+    @GetMapping("/{coinId}")
+    public ResponseEntity<?> getSpecificCoinGraphData(@PathVariable String coinId) {
+        return ResponseEntity.ok(Map.of("coin", coinId, "status", "synced"));
     }
 }

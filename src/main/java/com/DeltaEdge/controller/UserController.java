@@ -125,4 +125,19 @@ public class UserController {
         }
         throw new Exception("Wrong OTP");
     }
+
+    @PostMapping("/api/users/enable-two-factor-auth")
+    public ResponseEntity<String> initializeTwoFactorAuth(
+            @RequestHeader("Authorization") String jwt) throws Exception {
+
+        User user = userService.findUserProfileByJwt(jwt);
+        VerificationCode verificationCode = verificationCodeService.getVerificationCodeById(user.getId());
+        if (verificationCode == null) {
+            verificationCode = verificationCodeService.sendVerificationCode(user, VerificationType.EMAIL);
+        }
+
+        emailService.sendVerificationOtpEmail(user.getEmail(), verificationCode.getOtp());
+
+        return new ResponseEntity<>("2FA Setup Initiated. OTP sent to email.", HttpStatus.OK);
+    }
 }

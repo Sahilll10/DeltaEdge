@@ -36,7 +36,7 @@ public class PaymentDetailsController {
         return new ResponseEntity<>(paymentDetails, HttpStatus.CREATED);
     }
 
-    @GetMapping
+    @GetMapping("/details")
     public ResponseEntity<PaymentDetails> getUsersPaymentDetails(
             @RequestHeader("Authorization") String jwt) throws Exception {
 

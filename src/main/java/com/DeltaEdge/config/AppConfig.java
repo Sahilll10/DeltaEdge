@@ -45,8 +45,14 @@ public class AppConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Frontend origins (React/Vite setup)
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "https://delta-edge-frontend.vercel.app"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://delta-edge-frontend.vercel.app"
+        ));
+
+        // SDE FIX: Added "PATCH" to the allowed methods!
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowCredentials(true);
 
         // Required headers for the Idempotency Layer and Auth to function

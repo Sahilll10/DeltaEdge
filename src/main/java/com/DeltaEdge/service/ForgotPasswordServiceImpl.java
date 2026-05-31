@@ -5,10 +5,12 @@ import com.DeltaEdge.model.ForgotPasswordToken;
 import com.DeltaEdge.model.User;
 import com.DeltaEdge.repository.ForgotPasswordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-public class ForgotPasswordImpl implements ForgotPasswordService{
+@Service
+public class ForgotPasswordServiceImpl implements ForgotPasswordService{
 
     @Autowired
   private ForgotPasswordRepository forgotPasswordRepository;

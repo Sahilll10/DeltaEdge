@@ -3,6 +3,7 @@ package com.DeltaEdge.service;
 import com.DeltaEdge.domain.VerificationType;
 import com.DeltaEdge.model.ForgotPasswordToken;
 import com.DeltaEdge.model.User;
+import org.springframework.stereotype.Service;
 
 public interface ForgotPasswordService {
 

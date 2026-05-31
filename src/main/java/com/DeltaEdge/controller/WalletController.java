@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.Map;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -67,27 +67,37 @@ public class WalletController {
         Wallet wallet = walletService.payOrderPayment(order, user);
         return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
     }
-
     @PutMapping("/deposit")
     public ResponseEntity<Wallet> addBalanceToWallet(
             @RequestHeader("Authorization") String jwt,
-            @RequestParam(name = "order_id") Long orderId,
-            @RequestParam(name = "payment_id") String paymentId
+            @RequestParam(name = "order_id", required = false) Long orderId,
+            @RequestParam(name = "payment_id", required = false) String paymentId,
+            @RequestBody(required = false) Map<String, Object> requestBody
     ) throws Exception {
         User user = userService.findUserProfileByJwt(jwt);
         Wallet wallet = walletService.getUserWallet(user);
-        PaymentOrder order = paymentService.getPaymentOrderById(orderId);
-        Boolean status = paymentService.ProceedPaymentOrder(order, paymentId);
-
         if (wallet.getBalance() == null) {
             wallet.setBalance(BigDecimal.ZERO);
         }
 
-        if (status) {
-            // Updated to pass the amount as Long to match your current service signature
-            wallet = walletService.addBalanceToWallet(wallet, order.getAmount());
+        //Direct Test
+        if (requestBody != null && requestBody.containsKey("amount")) {
+            // Using Number prevents Jackson ClassCastExceptions between Integer and Long
+            Number amount = (Number) requestBody.get("amount");
+            wallet = walletService.addBalanceToWallet(wallet, amount.longValue());
+            return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
         }
-        return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
+        //Razorpay Verification Flow
+        if (orderId != null && paymentId != null) {
+            PaymentOrder order = paymentService.getPaymentOrderById(orderId);
+            Boolean status = paymentService.ProceedPaymentOrder(order, paymentId);
+            if (status) {
+                wallet = walletService.addBalanceToWallet(wallet, order.getAmount());
+            }
+            return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
+        }
+
+        throw new Exception("Invalid deposit request: Missing amount or payment credentials.");
     }
 
     //Added missing Transactions endpoint

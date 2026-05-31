@@ -29,12 +29,16 @@ public class JwtProvider {
 
     // EXTRACT EMAIL
     public static String getEmailFromJwtToken(String jwt) {
+        // SDE FIX: Safely and centrally strip the "Bearer " prefix.
+        // This prevents 500 crashes across ALL controllers.
+        if (jwt != null && jwt.startsWith("Bearer ")) {
+            jwt = jwt.substring(7).trim();
+        }
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(jwt)
                 .getBody();
-
         return String.valueOf(claims.get("email"));
     }
 

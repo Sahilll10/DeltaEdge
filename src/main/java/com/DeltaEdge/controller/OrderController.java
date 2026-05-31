@@ -100,6 +100,7 @@ public class OrderController {
             @RequestParam(required = false) OrderType order_type,
             @RequestParam(required = false) String asset_symbol
     ) throws Exception {
+        String cleanToken = (jwt != null && jwt.startsWith("Bearer ")) ? jwt.substring(7).trim() : jwt;
         User user = userService.findUserProfileByJwt(jwt);
         List<Order> orders = orderService.getAllOrdersOfUser(user.getId(), order_type, asset_symbol);
         return ResponseEntity.ok(orders);

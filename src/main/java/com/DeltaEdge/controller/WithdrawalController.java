@@ -32,22 +32,18 @@ public class WithdrawalController {
     @Autowired
     private WalletService walletService;
 
-    @PostMapping("/{amount}")
+    @PostMapping
     public ResponseEntity<Withdrawal> withdrawalRequest(
-            @PathVariable Long amount,
-            @RequestHeader("Authorization") String jwt) throws Exception {
+            @RequestHeader("Authorization") String jwt,
+            @RequestBody java.util.Map<String, Object> req) throws Exception {
 
         User user = userService.findUserProfileByJwt(jwt);
         Wallet userWallet = walletService.getUserWallet(user);
-
-        // Fintech Upgrade: Convert Long to BigDecimal for service compatibility
+        Number amountStr = (Number) req.get("amount");
+        Long amount = amountStr.longValue();
         BigDecimal withdrawalAmount = BigDecimal.valueOf(amount);
-
         Withdrawal withdrawal = withdrawalService.requestWithdrawal(withdrawalAmount, user);
-
-        // Deduct balance (using negative value)
         walletService.addBalanceToWallet(userWallet, -amount);
-
         // Record in the Audit Ledger
         walletTransactionService.createTransaction(
                 userWallet,
@@ -56,7 +52,6 @@ public class WithdrawalController {
                 "Bank Account Withdrawal",
                 withdrawalAmount.negate()
         );
-
         return new ResponseEntity<>(withdrawal, HttpStatus.OK);
     }
 

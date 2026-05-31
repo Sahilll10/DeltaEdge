@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -19,7 +20,7 @@ public class WalletServiceImpl implements WalletService {
     private WalletRepository walletRepository;
 
     @Autowired
-    private WalletTransactionRepository transactionRepository;
+    private WalletTransactionRepository walletTransactionRepository;
 
     @Override
     @Transactional
@@ -128,11 +129,17 @@ public class WalletServiceImpl implements WalletService {
         transaction.setPurpose(purpose);
         transaction.setAmount(amount);
         transaction.setTimestamp(LocalDateTime.now());
-        transactionRepository.save(transaction);
+        walletTransactionRepository.save(transaction);
     }
 
     @Override
     public Wallet findWalletById(Long id) throws Exception {
         return walletRepository.findById(id).orElseThrow(() -> new Exception("Wallet not found."));
+    }
+
+    @Override
+    public List<WalletTransaction> getTransactionsByWallet(Wallet wallet) {
+        // Query the database directly for this wallet's transactions
+        return walletTransactionRepository.findByWallet(wallet);
     }
 }

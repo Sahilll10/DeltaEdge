@@ -49,6 +49,7 @@ public class CoinServiceImpl implements CoinService {
     private static final String COIN_CACHE_KEY = "COIN_LIST_PAGE_";
 
     @Override
+    @SuppressWarnings("unchecked")
     @CircuitBreaker(name = "coinService", fallbackMethod = "fallbackGetCoinList")
     public List<Coin> getCoinList(int page) throws Exception {
         String cacheKey = COIN_CACHE_KEY + page;

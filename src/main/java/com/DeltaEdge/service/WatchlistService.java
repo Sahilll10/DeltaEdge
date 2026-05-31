@@ -10,4 +10,5 @@ public interface WatchlistService {
     Watchlist createWatchlist(User user);
     Watchlist findById(Long id) throws Exception;
     Watchlist addItemToWatchlist(Coin coin, User user) throws Exception;
+    Watchlist removeItemFromWatchlist(Coin coin, User user) throws Exception;
 }

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -87,5 +88,18 @@ public class WalletController {
             wallet = walletService.addBalanceToWallet(wallet, order.getAmount());
         }
         return new ResponseEntity<>(wallet, HttpStatus.ACCEPTED);
+    }
+
+    //Added missing Transactions endpoint
+    @GetMapping("/transactions")
+    public ResponseEntity<List<WalletTransaction>> getWalletTransactions(
+            @RequestHeader("Authorization") String jwt
+    ) throws Exception {
+        User user = userService.findUserProfileByJwt(jwt);
+        Wallet wallet = walletService.getUserWallet(user);
+
+        // Use the walletService to fetch transactions instead of the entity!
+        List<WalletTransaction> transactions = walletService.getTransactionsByWallet(wallet);
+        return new ResponseEntity<>(transactions, HttpStatus.OK);
     }
 }

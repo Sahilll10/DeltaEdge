@@ -48,4 +48,13 @@ public class GraphController {
                     .body("Sync failed: " + e.getMessage());
         }
     }
+
+    // FIX: Added the missing /edges endpoint requested by the frontend
+    @GetMapping("/edges")
+    public ResponseEntity<?> getGraphEdges() {
+        // Assuming your GraphAnalysisService has a method to fetch the graph edges.
+        // If the method is named differently in your service, just update this line!
+        Object edges = graphAnalysisService.getGraphEdges();
+        return ResponseEntity.ok(edges);
+    }
 }

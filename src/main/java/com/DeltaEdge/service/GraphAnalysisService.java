@@ -100,4 +100,8 @@ public class GraphAnalysisService {
             }
         }
     }
+
+    public List<MarketEdge> getGraphEdges() {
+        return marketEdgeRepository.findAll();
+    }
 }

@@ -1,6 +1,5 @@
 package com.DeltaEdge.controller;
 
-
 import com.DeltaEdge.model.PaymentDetails;
 import com.DeltaEdge.model.User;
 import com.DeltaEdge.service.UserService;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/payment-details")
@@ -21,13 +19,14 @@ public class PaymentDetailsController {
     @Autowired
     private PaymentDetailsService paymentDetailsService;
 
-    @PostMapping("/payment-details")
+    @PostMapping
     public ResponseEntity<PaymentDetails> addPaymentDetails(
             @RequestBody PaymentDetails paymentDetailsRequest,
-            @RequestHeader("Authorization")String jwt) throws Exception{
-        User user= userService.findUserProfileByJwt(jwt);
+            @RequestHeader("Authorization") String jwt) throws Exception {
 
-        PaymentDetails paymentDetails= paymentDetailsService.addPaymentDetails(
+        User user = userService.findUserProfileByJwt(jwt);
+
+        PaymentDetails paymentDetails = paymentDetailsService.addPaymentDetails(
                 paymentDetailsRequest.getAccountNUmber(),
                 paymentDetailsRequest.getAccountHolderName(),
                 paymentDetailsRequest.getIfsc(),
@@ -37,15 +36,13 @@ public class PaymentDetailsController {
         return new ResponseEntity<>(paymentDetails, HttpStatus.CREATED);
     }
 
-
-    @GetMapping("/payment-details")
+    @GetMapping
     public ResponseEntity<PaymentDetails> getUsersPaymentDetails(
-            @RequestHeader("Authorization") String jwt)
-            throws Exception {
-        User user= userService.findUserProfileByJwt(jwt);
-        PaymentDetails paymentDetails= paymentDetailsService
-                                          .getUserPaymentDetails(user);
+            @RequestHeader("Authorization") String jwt) throws Exception {
 
-        return new ResponseEntity<>(paymentDetails, HttpStatus.CREATED);
+        User user = userService.findUserProfileByJwt(jwt);
+        PaymentDetails paymentDetails = paymentDetailsService.getUserPaymentDetails(user);
+
+        return new ResponseEntity<>(paymentDetails, HttpStatus.OK);
     }
 }

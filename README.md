@@ -1,53 +1,55 @@
-# DeltaEdge
+# ⚡ DeltaEdge: Algorithmic Trading Engine
 
-> **High-Frequency Trading & Graph-Based Risk Contagion Engine**
-> 
-> Developed by: Sahil Kumar (Roll: 3252)
+![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 
-DeltaEdge is a high-performance backend infrastructure designed for real-time cryptocurrency telemetry and systemic risk analysis. Unlike standard trading platforms, DeltaEdge treats the market as a **directed graph**, allowing for complex analysis of how a price drop in one asset propagates through correlated markets using non-linear search algorithms.
+DeltaEdge is a full-stack, cloud-deployed cryptographic trading simulator and market analysis engine. Built with a resilient microservice-oriented architecture, it provides real-time market data, secure dual-entry wallet management, and robust order execution capabilities.
 
-## 🧠 Engineered Features
+### 🔗 Live Links
+* **Live Dashboard (Frontend):** [https://delta-edge-frontend.vercel.app/]
+* **API Engine (Backend):** [https://deltaedge-engine.onrender.com/]
 
-### 1. Graph-Based Risk Contagion Engine
-The core differentiator of DeltaEdge. The system maps coin correlations as a graph where:
-* **Nodes:** Crypto assets.
-* **Edges:** Weighted market correlations.
-* **Algorithm:** Implements **Breadth-First Search (BFS)** to simulate market "contagion." When a source asset (e.g., Bitcoin) experiences a simulated crash, the engine calculates the cascading impact on secondary and tertiary assets based on their edge weights.
-
-### 2. Resilience-First Market Ingestion
-Built to withstand external API failures and network degradation:
-* **Resilience4j Integration:** Protects the system from CoinGecko rate limits.
-* **Autonomous Fallback:** If the external API fails, the **Circuit Breaker** triggers a fallback state, immediately serving the most recent valid market snapshot from the local H2/MySQL persistence layer.
-
-### 3. Distributed Caching & Performance
-* **Redis Layer:** Reduces latency by caching high-traffic paginated data and top-ranking market results with a 5-minute TTL.
-* **Zero-Block Initialization:** A dedicated `DataInitializer` (CommandLineRunner) handles asynchronous data seeding on startup to ensure the engine is "warm" before the first user request.
-
-### 4. Real-Time Telemetry & WebSockets
-* **STOMP/WebSocket Protocol:** Pushes real-time price updates to connected clients without polling.
-* **Atomic Order Execution:** Ensures idempotent trading operations to prevent race conditions during high-volatility events.
+---
 
 ## 🏗️ System Architecture
 
-```mermaid
-graph TD
-    %% Monochrome Technical Aesthetic
-    classDef default fill:#fff,stroke:#000,stroke-width:1px,color:#000,shape:rect;
-    classDef database fill:#eee,stroke:#000,stroke-width:1px,color:#000;
+DeltaEdge is built on a distributed, resilient architecture designed to handle rate limits and maintain data integrity.
 
-    User[Client] -- WebSocket/REST --> API[DeltaEdge Gateway]
-    API --> RateLimiter[Redis Rate Limiter]
-    
-    subgraph Engine [Core Processing Engine]
-        API --> GraphSvc[Graph Risk Analysis BFS]
-        API --> MarketSvc[Market Telemetry]
-        MarketSvc --> CB[Resilience4j Circuit Breaker]
-    end
+* **Frontend Layer:** React.js Single Page Application (SPA) utilizing Vite for rapid bundling, styled with custom CSS and Lucide React icons.
+* **API Gateway & Core:** Spring Boot 3.x REST API handling authentication, business logic, and routing.
+* **Authentication:** Stateless JWT (JSON Web Token) implementation utilizing 256-bit HMAC-SHA secure keys via Spring Security.
+* **Primary Persistence:** PostgreSQL database handling User state, dual-entry Wallet transactions, and Order histories.
+* **Market Data & Caching:** Real-time data ingestion via the CoinGecko Pro API. Implements graceful degradation—falling back to local database persistence when the API is rate-limited or the Redis cache is unavailable.
+* **Resilience:** Circuit Breaker pattern (Resilience4j) implemented on external API calls to prevent cascading failures.
 
-    CB -- Fetch --> External[CoinGecko API]
-    CB -- Fallback --> H2[(Local Ledger)]
-    
-    MarketSvc --> RedisCache[(Redis Distributed Cache)]
-    GraphSvc --> Logic[Contagion Calculation]
-    
-    class RedisCache,H2 database;
+---
+
+## ✨ Core Features
+
+* **Real-Time Market Tracking:** Live INR pricing, 24h highs/lows, and market capitalization across the top cryptocurrencies.
+* **Secure JWT Authentication:** Full user lifecycle management with encrypted credential storage and token-based session validation.
+* **ACID-Compliant Wallet:** A dual-entry ledger system for depositing, withdrawing, and transferring simulated funds, protected by idempotency keys to prevent duplicate transactions.
+* **Order Execution:** Place simulated Buy/Sell orders that instantly calculate against live market rates and adjust wallet balances accordingly.
+* **Watchlist Management:** Users can curate custom watchlists that persist across sessions via the PostgreSQL database.
+* **Graceful Degradation:** The engine intelligently bypasses offline Redis clusters and rate-limited APIs to serve the last known good state from the database.
+
+---
+
+## 🚀 Getting Started (Local Development)
+
+To run DeltaEdge locally, you will need Java 17+, Node.js, and a PostgreSQL instance.
+
+### 1. Backend Setup (Spring Boot)
+```bash
+# Clone the repository
+git clone [https://github.com/yourusername/deltaedge.git](https://github.com/yourusername/deltaedge.git)
+cd deltaedge-backend
+
+# Configure your environment variables in application.properties
+# DB_URL, DB_USER, DB_PASSWORD, COINGECKO_API_KEY, JWT_SECRET_KEY
+
+# Build and run the engine
+./mvnw spring-boot:run

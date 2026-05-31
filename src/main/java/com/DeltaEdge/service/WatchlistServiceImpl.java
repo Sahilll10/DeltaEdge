@@ -16,8 +16,14 @@ public class WatchlistServiceImpl implements WatchlistService {
     @Override
     public Watchlist findUserWatchlist(Long userId) throws Exception {
         Watchlist watchlist = watchlistRepository.findByUserId(userId);
+
+        // Lazy Initialization
         if (watchlist == null) {
-            throw new Exception("Watchlist not found for user: " + userId);
+            watchlist = new Watchlist();
+            User proxyUser = new User();
+            proxyUser.setId(userId);
+            watchlist.setUser(proxyUser);
+            watchlist = watchlistRepository.save(watchlist);
         }
         return watchlist;
     }

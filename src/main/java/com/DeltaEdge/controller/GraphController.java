@@ -4,7 +4,6 @@ import com.DeltaEdge.model.MarketEdge;
 import com.DeltaEdge.service.GraphAnalysisService;
 import com.DeltaEdge.service.GraphDataSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,20 +24,22 @@ public class GraphController {
     @Autowired
     private GraphDataSyncService graphDataSyncService;
 
-    // Handles the "Sync Graph" button
-    @GetMapping("/sync")
-    public ResponseEntity<Map<String, String>> syncGraph() throws Exception {
-        graphDataSyncService.buildGraphFromCoinGecko();
-        return ResponseEntity.ok(Collections.singletonMap("message", "Graph synced successfully"));
+    // FIXED: Changed to @PostMapping to perfectly match api.post('/api/graph/sync')
+    @PostMapping("/sync")
+    public ResponseEntity<Map<String, String>> syncGraph() {
+        try {
+            graphDataSyncService.buildGraphFromCoinGecko();
+            return ResponseEntity.ok(Collections.singletonMap("message", "Graph synced successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
 
-    // Handles the initial edge drawing
     @GetMapping("/edges")
     public ResponseEntity<List<MarketEdge>> getEdges() {
         return ResponseEntity.ok(graphAnalysisService.getGraphEdges());
     }
 
-    // Handles: graphAPI.getContagion(id)
     @GetMapping("/contagion/{coinId}")
     public ResponseEntity<Map<String, Object>> getContagion(@PathVariable String coinId) {
         Map<String, Double> impactMap = graphAnalysisService.calculateContagionRisk(coinId, 10.0);
@@ -58,18 +59,12 @@ public class GraphController {
         return ResponseEntity.ok(response);
     }
 
-    // Handles: graphAPI.getRiskScore(id)
-    @GetMapping("/risk/{coinId}")
+    // FIXED: Changed URL to /risk-score to perfectly match api.get('/api/graph/risk-score/${coinId}')
+    @GetMapping("/risk-score/{coinId}")
     public ResponseEntity<Map<String, Object>> getRiskScore(@PathVariable String coinId) {
         Map<String, Object> response = new HashMap<>();
-        response.put("score", 75); // Safe default
+        response.put("score", 75);
         response.put("description", "High systemic correlation detected in recent market movements.");
         return ResponseEntity.ok(response);
-    }
-
-    // CATCH-ALL FAILSAFE: Fixes the 404 error if api.js calls /api/graph/tether directly
-    @GetMapping("/{coinId}")
-    public ResponseEntity<Map<String, Object>> catchAllFallback(@PathVariable String coinId) {
-        return getContagion(coinId);
     }
 }

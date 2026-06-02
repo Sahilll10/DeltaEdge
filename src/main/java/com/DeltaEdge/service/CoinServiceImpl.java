@@ -93,7 +93,19 @@ public class CoinServiceImpl implements CoinService {
 
     @Override
     public Coin findById(String coinId) throws Exception {
-        return coinRepository.findById(coinId).orElseThrow(() -> new Exception("Coin Not Found"));
+        return coinRepository.findById(coinId).orElseGet(() -> {
+            log.warn("Coin {} not found in local DB. Hydrating from CoinGecko...", coinId);
+            try {
+                // Trigger the existing details method which fetches and SAVES the coin
+                getCoinDetails(coinId);
+                // Now fetch it from the DB where it was just saved
+                return coinRepository.findById(coinId)
+                        .orElseThrow(() -> new Exception("Failed to hydrate coin: " + coinId));
+            } catch (Exception e) {
+                log.error("Auto-hydration failed for {}: {}", coinId, e.getMessage());
+                throw new RuntimeException("Coin Not Found and Hydration Failed");
+            }
+        });
     }
 
     // Fallback for Circuit Breaker
